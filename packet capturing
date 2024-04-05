@@ -1,0 +1,106 @@
+import subprocess
+import os
+import argparse
+
+def display_figlet_with_lolcat(text, font):
+    figlet_command = ["figlet", "-f", font, "-c", text]
+    lolcat_command = ["/usr/games/lolcat"]  # Full path to lolcat command
+    
+    figlet_process = subprocess.Popen(figlet_command, stdout=subprocess.PIPE)
+    lolcat_process = subprocess.Popen(lolcat_command, stdin=figlet_process.stdout, stdout=subprocess.PIPE)
+    
+    figlet_process.stdout.close()
+    
+    output, _ = lolcat_process.communicate()
+    print(output.decode('utf-8'))
+
+def clear_screen():
+    if os.name == 'posix':
+        _ = subprocess.call('clear', shell=True)
+    elif os.name == 'nt':
+        _ = subprocess.call('cls', shell=True)
+
+def register_case():
+    case_name = input("Enter the case name: ")
+    while True:
+        case_number = input("Enter the case number: ")
+        if case_number.isdigit():
+            break
+        else:
+            print("Invalid input. Please enter a valid number.")
+    organization = input("Enter the organization: ")
+    print("Case registration successful!")
+    input("Press Enter to continue...")
+    clear_screen()
+    display_figlet_with_lolcat("Network Forensic Tool", "standard")  # Redisplay template
+    display_figlet_with_lolcat("Get DDOS report", "digital")
+    print("\nEnter command:")
+
+def execute_tcpdump(command):
+    parser = argparse.ArgumentParser(description="Packet capture utility using tcpdump")
+    parser.add_argument("-c", "--count", type=int, help="Number of packets to capture", required=True)
+    parser.add_argument("-i", "--interface", help="Interface to capture packets from")
+    parser.add_argument("target", nargs="+", help="Target specification (e.g., src host 192.168.1.1)")
+    args = parser.parse_args(command.split()[1:])
+    capture_packets(args.count, args.interface, " ".join(args.target))
+
+def capture_packets(packet_count, interface=None, target=None):
+    output_folder = "outputs"  # Fixed output folder
+    output_filename = "output2.pcap"  # Fixed output filename
+    
+    # Ensure the output folder exists
+    os.makedirs(output_folder, exist_ok=True)
+    # Define the output file path
+    output_file = os.path.join(output_folder, output_filename)
+
+    # Define the tcpdump command
+    command = ["tcpdump", "-c", str(packet_count), "-w", output_file]
+    
+    # Add interface option if specified
+    if interface:
+        command.extend(["-i", interface])
+    
+    # Add target option if specified
+    if target:
+        command.extend([target])
+
+    try:
+        # Execute tcpdump command
+        subprocess.run(command, check=True)
+        # Print success message
+        print(f"Packets captured successfully and saved to {output_file}")
+    except subprocess.CalledProcessError as e:
+        # Handle errors if any
+        print("Error executing tcpdump:", e.output.decode('utf-8'))
+
+def main():
+    clear_screen()  # Clear the screen
+    display_figlet_with_lolcat("Network Forensic Tool", "standard")  # Using "standard" font instead of "slant"
+    display_figlet_with_lolcat("Get DDOS report", "digital")
+
+    case_registered = False  # Flag to track if a case is registered
+
+    while True:
+        if not case_registered:
+            print("\n1. Register Case")
+            print("2. Exit")
+            choice = input("Enter your choice: ")
+
+            if choice == '1':
+                register_case()
+                case_registered = True
+            elif choice == '2':
+                print("Exiting...")
+                break
+            else:
+                print("Invalid choice. Please try again.")
+        else:
+            command = input("\nEnter command: ")
+            if command.startswith("ntfs "):
+                # Remove 'ntfs ' from the command
+                execute_tcpdump(command)
+            else:
+                print("Invalid command. Commands must start with 'ntfs'.")
+
+if __name__ == "__main__":
+    main()
